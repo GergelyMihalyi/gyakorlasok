@@ -1151,9 +1151,182 @@ Melyik kódrészlet helytelen?
    3. felül van írva
    4. jó abstract ezért nem kötelező felülírnia
 
+GYAKORLAT:
+FILE BEOLVASÁS
+
+public int getNumberOfMales(String path){
+        int numberOfMales = 0;
+        try(BufferedReader reader = Files.newBufferedReader(Path.of(path))){
+            String line;
+            while((line = reader.readLine()) != null){
+                String[] pieces = line.split(",");
+                if(SEARCH_STRING.equals(pieces[4])){
+                    numberOfMales++;
+                }
+            }
+        }catch(IOException ioe){
+            throw new IllegalStateException("Can not read file",ioe);
+        }
+
+        return numberOfMales;
+    }
+	
+FILE BEOLVASÁS / CLASSPATH
+
+try (BufferedReader reader = new BufferedReader(new InputStreamReader(FileReader.class.getResourceAsStream("data.csv")))) {
+    new FileReader().readLines(reader);
+} catch (IOException ioe) {
+    throw new IllegalStateException("Can not read file", ioe);
+}
+	
+FELSOROLÁSOS TÍPUS
+
+public enum Coin {
+    TWOHUNDRED, HUNDRED, TWENTY, TEN, FIVE
+
+    private final int value;
+
+    Coin(int value){
+        this.value=value;
+    }
+
+    public int getValue(){
+        return value;
+    }
+
+}
 
 
+A values() metódusról már volt szó, ez az összes enum értéket tartalmazó tömböt ad vissza.
 
+Coin[] coins = Coin.values();
+A valueOf() metódussal String alapján lehet lekérni a felsorolásos típus egy elemét, ahol a String maga a definiált konstans neve.
+
+Coin c = Coin.valueOf("HUNDRED"); //Coin.HUNDRED
+A name() metódus az ellenkező irány, amikor az enum értékből szeretnénk String-et kapni.
+
+Coin c = Coin.HUNDRED;
+String nameOfCoin = c.name(); //"HUNDRED"
+Az ordinal() visszaadja az adott elem sorszámát. Ugyanúgy, mint a tömb indexelése, ez is 0-val kezdődik.
+
+Coin c = Coin.HUNDRED;
+int index = c.ordinal(); //1
+
+TÖMBÖK
+
+int[] arrayOfNumbers = new int[10];
+
+TÖMBÖK TÖMBJE
+
+int[][] numbers = new int[5][3];
+
+int[][] numbers = new int[5][];
+numbers[0] = new int[3];
+numbers[1] = new int[8];
+Létrehozás literállal:
+
+int[][] numbers = {{1}, {1, 2}, {1, 2, 3}};
+
+String toString(): A tömb elemeit adja vissza szöveges formában, paraméterként a tömböt kell átadni.
+
+String deepToString(): Tömbök tömbjét adja vissza szöveges formában teljes mélységben olvashatóan, paraméterként a tömböt kell átadni.
+
+boolean equals(): Két azonos típusú elemekből álló tömböt hasonlít össze, és igazzal tér vissza, ha az elemek páronként egyenlőek.
+
+boolean deepEquals(): Két tömbök tömbjét hasonlítja össze, és igazzal tér vissza, ha az elemek minden szinten páronként megegyeznek.
+
+void sort(): Berendezi egy tömb elemeit növekvő sorrendbe, amennyiben az elemek típusának van természetes rendezettsége. Paraméterként a rendezendő tömböt kell megadni.
+
+T[] copyOf(): A paraméterként átadott tömb megadott hosszúságú másolatát adja vissza. Ha az eredeti tömb rövidebb, akkor a maradék helyeket alapértelmezett értékekkel tölti fel (lásd a tömb adattípusnál), ha hosszabb, akkor levágja a végét.
+
+T[] copyOfRange(): A paraméterként átadott tömb megadott indexek közötti szakaszát adja vissza. Az esetleges üres helyeket az alapértelmezett értékkel tölti fel.
+
+SQL SELECT
+
+public String findIpByName(String firstName, String lastName){
+        try(Connection conn=dataSource.getConnection();
+            PreparedStatement ps = conn.prepareStatement("select ip_address from people where first_name = ? and last_name = ?");){
+            ps.setString(1,firstName);
+            ps.setString(2,lastName);
+            return selectPeopleByPreparedStatement(ps);
+        }catch (SQLException sqle){
+            throw new IllegalStateException("Can not query", sqle);
+        }
+
+    }
+
+    private String selectPeopleByPreparedStatement(PreparedStatement ps){
+        String ip = "";
+        try(ResultSet rs = ps.executeQuery()){
+            if(rs.next()){
+                ip = rs.getString("ip_address");
+            }
+
+        }catch (SQLException sqle){
+            throw new IllegalStateException("Can not query", sqle);
+        }
+        return ip;
+    }
+	
+SAJÁT EXCEPTION
+
+public class InvalideAgeException extends RuntimeException {
+
+    private int parameterAge;
+
+    private int minAge;
+
+     public InvalideAgeException(String message, int parameterAge, int minAge){
+         super(message);
+         this.minAge = minAge;
+         this.parameterAge = parameterAge;
+     }
+
+     public int getParameterAge() {
+         return parameterAge;
+     }
+
+     public int getMinAge() {
+         return minAge;
+     }    
+}
+
+COLLECTIONS
+
+public Map<CruiseClass, Long> countPassengerByClass() {
+        isNotNull(passengers);
+        Map<CruiseClass, Long> counts =
+        passengers.stream().collect(Collectors.groupingBy(passenger -> passenger.getCruiseClass(), Collectors.counting()));
+
+        return counts;
+    }
+	
+public List<String> getPassengerNamesOrdered() {
+        isNotNull(passengers);
+        List<String> orderedPassengerNames = passengers.stream().sorted(Comparator.comparing(Passenger::getName)).map(passenger -> passenger.getName()).collect(Collectors.toList());
+        return orderedPassengerNames;
+    }
+	
+LISTA RENDEZÉSE
+List<Integer> numbers = new ArrayList<>(List.of(6, 5, 8, 3));
+Collections.sort(numbers);
+
+// Figyelembe veszi az ékezeteket
+List<String> names = new ArrayList<>(List.of("Benjámin", "Áron", "József", "Arnold"));
+Collections.sort(names, Collator.getInstance(new Locale("hu", "HU")));
+
+List<Employee> employees = new ArrayList<>(List.of(
+        new Employee("John Doe", 1980),
+        new Employee("Jack Doe", 1970)));
+
+// Év vagy név szeretnénk rendezni
+Collections.sort(employees, new Comparator<Employee>() {
+    @Override
+    public int compare(Employee o1, Employee o2) {
+        // return o1.getYearOfBirth() - o2.getYearOfBirth();
+        return o1.getName().compareTo(o2.getName());
+    }
+});
 
 
 
